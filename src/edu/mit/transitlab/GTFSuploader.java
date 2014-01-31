@@ -12,8 +12,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.postgresql.copy.CopyManager;
@@ -54,21 +52,21 @@ public class GTFSuploader {
             System.exit(1);
 
         }
-//        try {
-//            readStops();
-//        } catch (IOException ex) {
-//            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        try {
+            readStops();
+        } catch (IOException ex) {
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-//        try {
-//            readStopTimes();
-//        } catch (IOException ex) {
-//            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        try {
+            readStopTimes();
+        } catch (IOException ex) {
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
         try {
             readCalendar();
         } catch (IOException ex) {
@@ -76,15 +74,14 @@ public class GTFSuploader {
         } catch (SQLException ex) {
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-//        try {
-//            readCalendar_dates();
-//        } catch (IOException ex) {
-//            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        
+
+        try {
+            readCalendar_dates();
+        } catch (IOException ex) {
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
         try {
             readRoutes();
         } catch (IOException ex) {
@@ -92,9 +89,9 @@ public class GTFSuploader {
         } catch (SQLException ex) {
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
-//        
-//        
-//        
+        
+        
+        
         try {
             readTrips();
         } catch (IOException ex) {
@@ -102,7 +99,6 @@ public class GTFSuploader {
         } catch (SQLException ex) {
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         try {
             closeDatabaseConnection();
         } catch (SQLException ex) {
@@ -306,51 +302,38 @@ public class GTFSuploader {
             System.out.println(e);
         };
 
-        BufferedReader reader
-                = new BufferedReader(
-                        new InputStreamReader(
-                                new FileInputStream("stop_times.txt")));
-        PrintStream textOut
-                = new PrintStream(
-                        new BufferedOutputStream(
-                                new FileOutputStream("stop_times_prepared.csv", false)));
-
-//        Skip first row
-        textOut.println(reader.readLine());
-
-        String line;
-
-        int j = 1;
-
-        for (; (line = reader.readLine()) != null; j++) {
-            String[] row = line.split(COMMA_DELIM_DBL_QUOTE_PATTERN, -1);
-//                The one row with a number
-            row[1] = "\"1899-12-31 " + row[1].substring(row[1].indexOf("\"") + 1);
-            row[2] = "\"1899-12-31 " + row[2].substring(row[2].indexOf("\"") + 1);
-
-            String output = "";
-
-//            Deal with quotes for numbers
-            for (int i = 0; i < row.length - 1; i++) {
-//                Putting empty quotes into null values.
-                output += row[i] + ",";
-            }
-            output += row[row.length - 1];
-            textOut.println(output);
-
-        }
-        textOut.close();
-        textOut.flush();
-        reader.close();
-
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
         try {
-            manager.copyIn("COPY gtfs.stop_times_" + startDate + "_" + endDate + " FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("stop_times_prepared.csv"));
+            String createTempStops = "CREATE TEMP TABLE tempstops \n"
+                    + "(\n"
+                    + "  trip_id character varying(64) NOT NULL,\n"
+                    + "  arrival_time character varying(8) NOT NULL,\n"
+                    + "  departure_time character varying(8) NOT NULL,\n"
+                    + "  stop_id character varying(64) NOT NULL,\n"
+                    + "  stop_sequence smallint NOT NULL,\n"
+                    + "  stop_headsign character varying(8),\n"
+                    + "  pickup_type smallint,\n"
+                    + "  drop_off_type smallint)WITH (\n"
+                    + "  OIDS=FALSE\n"
+                    + ");";
+            PreparedStatement createTemp = dbConnection.prepareStatement(createTempStops);
+
+            createTemp.execute();
+
+            manager.copyIn("COPY tempstops FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("stop_times.txt"));
+
+            String insertQuery = "INSERT INTO gtfs.stop_times_" + startDate + "_" + endDate + " \n"
+                    + "(SELECT trip_id, date '1899-12-31' + arrival_time::interval, date '1899-12-31' + departure_time::interval, stop_id, stop_sequence, \n"
+                    + "       stop_headsign, pickup_type, drop_off_type FROM tempstops);";
+
+            PreparedStatement insertStopTimes = dbConnection.prepareStatement(insertQuery);
+            insertStopTimes.execute();
         } catch (PSQLException ex) {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
         }
+
     }
 
     private static void createStopsTimesTable() throws SQLException {
@@ -421,17 +404,17 @@ public class GTFSuploader {
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
         try {
-            manager.copyIn("COPY gtfs.calendar_" + startDate + "_" + endDate + "(\n" +
-"\"service_id\",\n" +
-"\"monday\",\n" +
-"\"tuesday\",\n" +
-"\"wednesday\",\n" +
-"\"thursday\",\n" +
-"\"friday\",\n" +
-"\"saturday\",\n" +
-"\"sunday\",\n" +
-"\"start_date\",\n" +
-"\"end_date\") FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("calendar_prepared.csv"));
+            manager.copyIn("COPY gtfs.calendar_" + startDate + "_" + endDate + "(\n"
+                    + "\"service_id\",\n"
+                    + "\"monday\",\n"
+                    + "\"tuesday\",\n"
+                    + "\"wednesday\",\n"
+                    + "\"thursday\",\n"
+                    + "\"friday\",\n"
+                    + "\"saturday\",\n"
+                    + "\"sunday\",\n"
+                    + "\"start_date\",\n"
+                    + "\"end_date\") FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("calendar_prepared.csv"));
         } catch (PSQLException ex) {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
@@ -454,7 +437,7 @@ public class GTFSuploader {
         createStops.execute();
 
     }
-    
+
     private static void readCalendar_dates() throws IOException, SQLException {
         if (dbConnection.isClosed()) {
             openDatabaseConnection();
@@ -465,8 +448,6 @@ public class GTFSuploader {
         } catch (PSQLException e) {
             System.out.println(e);
         };
-
-        
 
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
@@ -494,7 +475,7 @@ public class GTFSuploader {
         createStops.execute();
 
     }
-    
+
     private static void readTrips() throws IOException, SQLException {
         if (dbConnection.isClosed()) {
             openDatabaseConnection();
@@ -505,8 +486,6 @@ public class GTFSuploader {
         } catch (PSQLException e) {
             System.out.println(e);
         };
-
-        
 
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
@@ -534,7 +513,7 @@ public class GTFSuploader {
         createStops.execute();
 
     }
-    
+
     private static void readRoutes() throws IOException, SQLException {
         if (dbConnection.isClosed()) {
             openDatabaseConnection();
@@ -546,22 +525,20 @@ public class GTFSuploader {
             System.out.println(e);
         };
 
-        
-
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
         try {
-            manager.copyIn("COPY gtfs.routes_" + startDate + "_" + endDate + "(\n" +
-"route_id,\n" +
-"agency_id,\n" +
-"route_short_name,\n" +
-"route_long_name,\n" +
-"route_desc,\n" +
-"route_type,\n" +
-"route_url,\n" +
-"route_color,\n" +
-"route_text_color\n" +
-")  FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("routes.txt"));
+            manager.copyIn("COPY gtfs.routes_" + startDate + "_" + endDate + "(\n"
+                    + "route_id,\n"
+                    + "agency_id,\n"
+                    + "route_short_name,\n"
+                    + "route_long_name,\n"
+                    + "route_desc,\n"
+                    + "route_type,\n"
+                    + "route_url,\n"
+                    + "route_color,\n"
+                    + "route_text_color\n"
+                    + ")  FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("routes.txt"));
         } catch (PSQLException ex) {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
@@ -585,5 +562,3 @@ public class GTFSuploader {
 
     }
 }
-
-
