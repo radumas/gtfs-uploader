@@ -27,8 +27,7 @@ import org.postgresql.util.PSQLException;
 public class GTFSuploader {
 
     private static Connection dbConnection;
-    private static PreparedStatement insertStatement;
-    private static PreparedStatement createStatement;
+
     private static String startDate;
     private static String endDate;
     public static final String COMMA_DELIM_DBL_QUOTE_PATTERN
@@ -46,59 +45,126 @@ public class GTFSuploader {
 
         try {
             //        Get the start and end date from the feed info file.
+            System.out.print("Opening feed_info.txt...");
             openFeedInfo();
+            System.out.println("done.");
         } catch (IOException ex) {
-            System.out.println("Error opening feed_info.txt");
+            System.out.println("Error.");
             System.exit(1);
 
         }
         try {
+            System.out.print("Opening stops.txt...");
             readStops();
-        } catch (IOException ex) {
-            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         try {
+            
+            System.out.print("Opening stop_times.txt...");
             readStopTimes();
-        } catch (IOException ex) {
-            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
+            System.out.print("Opening calendar.txt...");
             readCalendar();
-        } catch (IOException ex) {
-            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         try {
+            System.out.print("Opening calendar_dates.txt...");
             readCalendar_dates();
-        } catch (IOException ex) {
-            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
+            System.out.print("Opening routes.txt...");
             readRoutes();
-        } catch (IOException ex) {
-            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-        
+
         try {
+            System.out.print("Opening trips.txt...");
             readTrips();
-        } catch (IOException ex) {
-            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        try {
+            System.out.print("Opening transfers.txt...");
+            readTransfers();
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            System.out.print("Opening frequencies.txt...");
+            readFrequencies();
+            System.out.println("done.");
+
+        } catch (IOException | SQLException ex) {
+            System.out.println("Error.");
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            System.out.print("Add primary keys and foreign keys to gtfs tables...");
+            basicKeys();
+            System.out.println("done.");
+
+        } catch (SQLException ex) {
+            System.out.println("Error.");
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            System.out.print("Adding geometry table, nearest stop stop matrix, and bus patterns...");
+
+            insertStopGeometry();
+            insertNearestStopStopMatrix();
+            insertBusPatterns();
+            System.out.println("done.");
+
+        } catch (SQLException ex) {
+            System.out.println("Error.");
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try {
+            System.out.print("Add primary keys and foreign keys to processed tables...");
+            advancedKeys();
+            System.out.println("done.");
+
+        } catch (SQLException ex) {
+            System.out.println("Error.");
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         try {
             closeDatabaseConnection();
         } catch (SQLException ex) {
@@ -353,6 +419,63 @@ public class GTFSuploader {
 
     }
 
+    private static void readFrequencies() throws IOException, SQLException {
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+
+        try {
+            createFrequenciesTable();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+
+        CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
+
+        try {
+            String createTempStops = "CREATE TEMP TABLE tempfrequencies \n"
+                    + "(\n"
+                    + "  trip_id character varying(64) NOT NULL,\n"
+                    + "  start_time character varying(8) NOT NULL,\n"
+                    + "  end_time character varying(8) NOT NULL,\n"
+                    + "  headway_secs smallint NOT NULL) WITH\n"
+                    + "(  OIDS=FALSE\n"
+                    + ");";
+            PreparedStatement createTemp = dbConnection.prepareStatement(createTempStops);
+
+            createTemp.execute();
+
+            manager.copyIn("COPY tempfrequencies FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("frequencies.txt"));
+
+            String insertQuery = "INSERT INTO gtfs.frequencies_" + startDate + "_" + endDate + " \n"
+                    + "(SELECT trip_id, date '1899-12-31' + start_time::interval, date '1899-12-31' + end_time::interval, headway_secs FROM tempfrequencies);";
+
+            PreparedStatement insertStopTimes = dbConnection.prepareStatement(insertQuery);
+            insertStopTimes.execute();
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+
+    }
+
+    private static void createFrequenciesTable() throws SQLException {
+        String createStopsQuery = "CREATE TABLE gtfs.frequencies_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + ")\n"
+                + "INHERITS (gtfs.frequencies)\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.frequencies_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO mbta_researchers;";
+        PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
+        createStops.execute();
+
+    }
+
     private static void readCalendar() throws IOException, SQLException {
         if (dbConnection.isClosed()) {
             openDatabaseConnection();
@@ -378,16 +501,14 @@ public class GTFSuploader {
 
         String line;
 
-        int j = 1;
-
-        for (; (line = reader.readLine()) != null; j++) {
+        for (; (line = reader.readLine()) != null;) {
             String[] row = line.split(COMMA_DELIM_DBL_QUOTE_PATTERN, -1);
 
             String output = "";
 
 //            Convert 0 & 1 to TRUE & FALSE for the table
             for (int i = 0; i < row.length - 1; i++) {
-                if (i >= 1 && 1 <= 7) {
+                if (i >= 1 && i <= 7) {
                     row[i] = (row[i].equals(1)) ? "TRUE" : "FALSE";
                 }
 
@@ -445,8 +566,8 @@ public class GTFSuploader {
 
         try {
             createCalendar_datesTable();
-        } catch (PSQLException e) {
-            System.out.println(e);
+        } catch (PSQLException ex) {
+            System.out.println(ex.getServerErrorMessage().getMessage());
         };
 
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
@@ -454,7 +575,6 @@ public class GTFSuploader {
         try {
             manager.copyIn("COPY gtfs.calendar_dates_" + startDate + "_" + endDate + " FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("calendar_dates.txt"));
         } catch (PSQLException ex) {
-            System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
         }
     }
@@ -514,6 +634,44 @@ public class GTFSuploader {
 
     }
 
+    private static void readTransfers() throws IOException, SQLException {
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+
+        try {
+            createTransfersTable();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+
+        CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
+
+        try {
+            manager.copyIn("COPY gtfs.transfers_" + startDate + "_" + endDate + " FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("transfers.txt"));
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+    }
+
+    private static void createTransfersTable() throws SQLException {
+        String createStopsQuery = "CREATE TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + ")\n"
+                + "INHERITS (gtfs.transfers)\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO mbta_researchers;";
+        PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
+        createStops.execute();
+
+    }
+
     private static void readRoutes() throws IOException, SQLException {
         if (dbConnection.isClosed()) {
             openDatabaseConnection();
@@ -560,5 +718,264 @@ public class GTFSuploader {
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
+    }
+
+    private static void insertStopGeometry() throws SQLException {
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+
+        try {
+            createStopGeometryTable();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+
+        try {
+            String insertQuery = "INSERT INTO gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                    + "    (SELECT stop_id, parent_station, ST_GeogFromText('SRID=4326;POINT(' || stop_lon || ' ' || stop_lat || ')')\n"
+                    + ",ST_GeomFromText('POINT(' || stop_lon || ' ' || stop_lat || ')',4326) "
+                    + "FROM gtfs.stops_" + startDate + "_" + endDate + " );"
+                    + "ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                + " ADD CONSTRAINT geog_" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (stop_id);\n"
+                + " ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                + " ADD CONSTRAINT _" + startDate + "_" + endDate + "_stop_id FOREIGN KEY (stop_id)\n"
+                + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION\n"
+                + "      NOT VALID;\n"
+                + "      CREATE INDEX geom_index_" + startDate + "_" + endDate + "\n"
+                + "  ON gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                + "  USING gist\n"
+                + "  (geom);";
+
+            PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
+            insert.execute();
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+
+    }
+
+    private static void createStopGeometryTable() throws SQLException {
+        String createStopsQuery = "CREATE TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + ")\n"
+                + "INHERITS (gtfs.stops_geog)\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO mbta_researchers;";
+        PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
+        createStops.execute();
+
+    }
+
+    private static void insertNearestStopStopMatrix() throws SQLException {
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+
+        try {
+            createNearestStopStopMatrixTable();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+
+        String insertQuery = "WITH stops AS(\n"
+                + "SELECT DISTINCT stops.stop_id, geog_latlon\n"
+                + "FROM gtfs.stops_" + startDate + "_" + endDate + " stops \n"
+                + "INNER JOIN gtfs.stop_times_" + startDate + "_" + endDate + " stop_times ON stop_times.stop_id = stops.stop_id\n"
+                + "INNER JOIN gtfs.trips_" + startDate + "_" + endDate + " trips ON trips.trip_id = stop_times.trip_id\n"
+                + "INNER JOIN gtfs.routes_" + startDate + "_" + endDate + " routes ON routes.route_id = trips.route_id\n"
+                + "INNER JOIN gtfs.stops_geog_" + startDate + "_" + endDate + " ON gtfs.stops_geog_" + startDate + "_" + endDate + ".stop_id = stops.stop_id\n"
+                + "WHERE route_type = 3\n"
+                + ")\n"
+                + ", nearest_matrix AS (\n"
+                + "\n"
+                + "SELECT stops_geog.stop_id AS next_o, \n"
+                + "		(SELECT nearest.stop_id FROM stops nearest WHERE nearest.stop_id != main.stop_id\n"
+                + "			ORDER BY CAST(nearest.geog_latlon AS geometry) <-> CAST(gtfs.stops_geog_" + startDate + "_" + endDate + ".geog_latlon AS geometry)\n"
+                + "		LIMIT 1) AS nearest_stop\n"
+                + "FROM stops main\n"
+                + "INNER JOIN gtfs.stops_geog_" + startDate + "_" + endDate + " stops_geog ON stops_geog.stop_id = main.stop_id\n"
+                + ")\n"
+                + "\n"
+                + "INSERT INTO gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
+                + "(SELECT next_o, nearest_stop, CAST(ST_DISTANCE(stops.geog_latlon, o.geog_latlon) AS INT)as nearest_distance\n"
+                + "FROM nearest_matrix\n"
+                + "INNER JOIN stops ON stops.stop_id = nearest_matrix.next_o\n"
+                + "INNER JOIN gtfs.stops_geog_" + startDate + "_" + endDate + " o ON o.stop_id = next_o);";
+
+        try {
+            PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
+            insert.execute();
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+
+    }
+
+    private static void createNearestStopStopMatrixTable() throws SQLException {
+        String createStopsQuery = "CREATE TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + ")\n"
+                + "INHERITS (gtfs.stop_stop_matrix)\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO mbta_researchers;";
+        PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
+        createStops.execute();
+
+    }
+
+    private static void insertBusPatterns() throws SQLException {
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+
+        try {
+            createBus_patterns_Table();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+
+        String insertQuery = "WITH bus_patterns AS(\n"
+                + "SELECT trips.trip_id, stop_id, stop_sequence\n"
+                + "	, (lead(CASE WHEN stop_times.stop_id is not null THEN stop_times.stop_id ELSE '0' END) \n"
+                + "		OVER (PARTITION BY stop_times.trip_id ORDER BY stop_sequence)) AS next_stop\n"
+                + "FROM gtfs.stop_times_" + startDate + "_" + endDate + " stop_times\n"
+                + "INNER JOIN gtfs.trips_" + startDate + "_" + endDate + " trips\n"
+                + "		ON stop_times.trip_id = trips.trip_id\n"
+                + "INNER JOIN gtfs.routes_" + startDate + "_" + endDate + " routes\n"
+                + "		ON trips.route_id = routes.route_id \n"
+                + "		AND route_short_name !='Shuttle'AND route_type = 3\n"
+                + "\n"
+                + ")\n"
+                + "INSERT INTO gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+                + "SELECT CAST(bus_patterns.trip_id AS integer), CAST (bus_patterns.stop_id AS integer)\n"
+                + "	, stop_sequence\n"
+                + "/*Use MBTA's distances_between_stops  table first, else use postGIS calculated values\n"
+                + "	Could improve by using actual shape files*/\n"
+                + "	, CAST(COALESCE((SUM(CASE WHEN use_map = 1 THEN distance_between_map\n"
+                + "		WHEN distance_between_survey is not null THEN distance_between_survey \n"
+                + "		ELSE 0 END) OVER (PARTITION BY bus_patterns.trip_id ORDER BY stop_sequence RANGE UNBOUNDED PRECEDING) \n"
+                + "		- (CASE WHEN use_map = 1 THEN distance_between_map\n"
+                + "		WHEN use_map = 0 THEN distance_between_survey \n"
+                + "		ELSE 0 END))/3.28084 ,\n"
+                + "	 ST_Distance(ST_TRANSFORM((SELECT geom FROM gtfs.stops_geog_" + startDate + "_" + endDate + " WHERE gtfs.stops_geog_" + startDate + "_" + endDate + ".stop_id = bus_patterns.stop_id),26986)\n"
+                + "		, ST_TRANSFORM((SELECT geom FROM gtfs.stops_geog_" + startDate + "_" + endDate + " WHERE gtfs.stops_geog_" + startDate + "_" + endDate + ".stop_id = next_stop),26986)))AS integer)\n"
+                + "	\n"
+                + "FROM bus_patterns\n"
+                + "	LEFT OUTER JOIN distances_between_stops \n"
+                + "		ON distances_between_stops.stop_id_start = bus_patterns.stop_id\n"
+                + "		AND  next_stop = distances_between_stops.stop_id_end;";
+
+        try {
+            PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
+            insert.execute();
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+
+    }
+
+    private static void createBus_patterns_Table() throws SQLException {
+        String createStopsQuery = "CREATE TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + ")\n"
+                + "INHERITS (gtfs.bus_patterns)\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO mbta_researchers;";
+        PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
+        createStops.execute();
+
+    }
+
+    private static void basicKeys() throws SQLException {
+        String constraintsQuery = "ALTER TABLE gtfs.calendar_" + startDate + "_" + endDate + "\n"
+                + "ADD CONSTRAINT service_id_" + startDate + "_" + endDate + "_key  PRIMARY KEY (service_id);\n"
+                + "ALTER TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + "\n"
+                + "ADD CONSTRAINT calendar_service_id_" + startDate + "_" + endDate + "_key PRIMARY KEY (service_id, service_date);\n"
+                + "ALTER TABLE gtfs.frequencies_" + startDate + "_" + endDate + "\n"
+                + "ADD CONSTRAINT frequencies_" + startDate + "_" + endDate + "_trip_id PRIMARY KEY (trip_id);\n"
+                + "ALTER TABLE gtfs.routes_" + startDate + "_" + endDate + "\n"
+                + "ADD CONSTRAINT _" + startDate + "_" + endDate + "_route_id PRIMARY KEY (route_id);\n"
+                + "ALTER TABLE gtfs.stop_times_" + startDate + "_" + endDate + "\n"
+                + "  ADD CONSTRAINT _" + startDate + "_" + endDate + "_trip_id_sequence PRIMARY KEY (trip_id, stop_sequence);\n"
+                + "      ALTER TABLE gtfs.stops_" + startDate + "_" + endDate + "\n"
+                + "     ADD CONSTRAINT _" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (stop_id);\n"
+                + "     ALTER TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
+                + "     ADD   CONSTRAINT _" + startDate + "_" + endDate + "_transfer_stop_id PRIMARY KEY (from_stop_id, to_stop_id);\n"
+                + "      ALTER TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
+                + "  ADD CONSTRAINT _" + startDate + "_" + endDate + "_trip_id PRIMARY KEY (trip_id);\n"
+                + "  ALTER TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
+                + "     ADD CONSTRAINT _" + startDate + "_" + endDate + "_from_stop_id FOREIGN KEY (from_stop_id)\n"
+                + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
+                + "  ALTER TABLE gtfs.stop_times_" + startDate + "_" + endDate + "\n"
+                + "  ADD CONSTRAINT _" + startDate + "_" + endDate + "_stop_id FOREIGN KEY (stop_id)\n"
+                + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
+                + "  ALTER TABLE gtfs.stop_times_" + startDate + "_" + endDate + "\n"
+                + "  ADD CONSTRAINT _" + startDate + "_" + endDate + "_trip_id FOREIGN KEY (trip_id)\n"
+                + "      REFERENCES gtfs.trips_" + startDate + "_" + endDate + " (trip_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
+                + "  ALTER TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
+                + "     ADD CONSTRAINT _" + startDate + "_" + endDate + "_to_stop_id FOREIGN KEY (to_stop_id)\n"
+                + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
+                + "ALTER TABLE gtfs.frequencies_" + startDate + "_" + endDate + "\n"
+                + "ADD CONSTRAINT _" + startDate + "_" + endDate + "_trip_id FOREIGN KEY (trip_id)\n"
+                + "      REFERENCES gtfs.trips_" + startDate + "_" + endDate + " (trip_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
+                + "      ALTER TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
+                + "   ADD CONSTRAINT _" + startDate + "_" + endDate + "_route_id FOREIGN KEY (route_id)\n"
+                + "      REFERENCES gtfs.routes_" + startDate + "_" + endDate + " (route_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;";
+        try {
+            PreparedStatement constraints = dbConnection.prepareStatement(constraintsQuery);
+            constraints.execute();
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+    }
+
+    private static void advancedKeys() throws SQLException {
+        String constraintsQuery = "ALTER TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+                + "  ADD CONSTRAINT bus_patterns_" + startDate + "_" + endDate + "_pk PRIMARY KEY (trip_id, stop_sequence);"
+                + "\n ALTER TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+                + "  ADD CONSTRAINT bus_patterns_" + startDate + "_" + endDate + "_stop FOREIGN KEY (stop_id)\n"
+                + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;"
+                + "\n ALTER TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+                + " ADD CONSTRAINT bus_patterns_" + startDate + "_" + endDate + "_trip FOREIGN KEY (trip_id)\n"
+                + "      REFERENCES gtfs.trips_" + startDate + "_" + endDate + " (trip_id) MATCH SIMPLE\n"
+                + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
+                + "      ALTER TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
+                + "ADD CONSTRAINT matrix_" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (from_stop_id);\n"
+                ;
+        try {
+            PreparedStatement constraints = dbConnection.prepareStatement(constraintsQuery);
+            constraints.execute();
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
     }
 }
