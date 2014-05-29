@@ -798,7 +798,7 @@ public class GTFSuploader {
                 + "\n"
                 + "SELECT stops_geog.stop_id AS next_o, \n"
                 + "		(SELECT nearest.stop_id FROM stops nearest WHERE nearest.stop_id != main.stop_id\n"
-                + "			ORDER BY CAST(nearest.geog_latlon AS geometry) <-> CAST(gtfs.stops_geog_" + startDate + "_" + endDate + ".geog_latlon AS geometry)\n"
+                + "			ORDER BY CAST(nearest.geog_latlon AS geometry) <-> CAST(stops_geog.geog_latlon AS geometry)\n"
                 + "		LIMIT 1) AS nearest_stop\n"
                 + "FROM stops main\n"
                 + "INNER JOIN gtfs.stops_geog_" + startDate + "_" + endDate + " stops_geog ON stops_geog.stop_id = main.stop_id\n"
