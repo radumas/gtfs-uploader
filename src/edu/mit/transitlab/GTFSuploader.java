@@ -509,7 +509,7 @@ public class GTFSuploader {
 //            Convert 0 & 1 to TRUE & FALSE for the table
             for (int i = 0; i < row.length - 1; i++) {
                 if (i >= 1 && i <= 7) {
-                    row[i] = (row[i].equals(1)) ? "TRUE" : "FALSE";
+                    row[i] = (row[i].equals("1")) ? "TRUE" : "FALSE";
                 }
 
                 output += row[i] + ",";
