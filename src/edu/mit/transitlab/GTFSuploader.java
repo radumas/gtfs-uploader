@@ -64,7 +64,7 @@ public class GTFSuploader {
         }
 
         try {
-            
+
             System.out.print("Opening stop_times.txt...");
             readStopTimes();
             System.out.println("done.");
@@ -620,10 +620,14 @@ public class GTFSuploader {
     private static void createTripsTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + ")\n"
-                + "INHERITS (gtfs.trips)\n"
-                + "WITH (\n"
-                + "  OIDS=FALSE\n"
+                + "route_id character varying(32) NOT NULL,\n"
+                + "  service_id character varying(32),\n"
+                + "  trip_id character varying(64) NOT NULL,\n"
+                + "  trip_headsign character varying(80),\n"
+                + "trip_short_name character varying (64), \n"
+                + "  direction_id smallint,\n"
+                + "  block_id character varying(16),\n"
+                + "  shape_id character varying(8)\n"
                 + ");\n"
                 + "ALTER TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
@@ -737,16 +741,16 @@ public class GTFSuploader {
                     + ",ST_GeomFromText('POINT(' || stop_lon || ' ' || stop_lat || ')',4326) "
                     + "FROM gtfs.stops_" + startDate + "_" + endDate + " );"
                     + "ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
-                + " ADD CONSTRAINT geog_" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (stop_id);\n"
-                + " ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
-                + " ADD CONSTRAINT _" + startDate + "_" + endDate + "_stop_id FOREIGN KEY (stop_id)\n"
-                + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
-                + "      ON UPDATE NO ACTION ON DELETE NO ACTION\n"
-                + "      NOT VALID;\n"
-                + "      CREATE INDEX geom_index_" + startDate + "_" + endDate + "\n"
-                + "  ON gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
-                + "  USING gist\n"
-                + "  (geom);";
+                    + " ADD CONSTRAINT geog_" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (stop_id);\n"
+                    + " ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                    + " ADD CONSTRAINT _" + startDate + "_" + endDate + "_stop_id FOREIGN KEY (stop_id)\n"
+                    + "      REFERENCES gtfs.stops_" + startDate + "_" + endDate + " (stop_id) MATCH SIMPLE\n"
+                    + "      ON UPDATE NO ACTION ON DELETE NO ACTION\n"
+                    + "      NOT VALID;\n"
+                    + "      CREATE INDEX geom_index_" + startDate + "_" + endDate + "\n"
+                    + "  ON gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+                    + "  USING gist\n"
+                    + "  (geom);";
 
             PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
             insert.execute();
@@ -814,8 +818,11 @@ public class GTFSuploader {
             PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
             insert.execute();
         } catch (PSQLException ex) {
+            System.out.println();
+            System.out.println("Error with: insertNearestStopStopMatrix()");
             System.out.println(ex);
-            System.out.println(ex.getServerErrorMessage().getMessage());
+            ex.printStackTrace();
+
         }
 
     }
@@ -968,8 +975,7 @@ public class GTFSuploader {
                 + "      REFERENCES gtfs.trips_" + startDate + "_" + endDate + " (trip_id) MATCH SIMPLE\n"
                 + "      ON UPDATE NO ACTION ON DELETE NO ACTION;\n"
                 + "      ALTER TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
-                + "ADD CONSTRAINT matrix_" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (from_stop_id);\n"
-                ;
+                + "ADD CONSTRAINT matrix_" + startDate + "_" + endDate + "_stop_id PRIMARY KEY (from_stop_id);\n";
         try {
             PreparedStatement constraints = dbConnection.prepareStatement(constraintsQuery);
             constraints.execute();
