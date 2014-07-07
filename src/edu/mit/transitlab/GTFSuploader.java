@@ -48,7 +48,7 @@ public class GTFSuploader {
             System.out.print("Opening feed_info.txt...");
             openFeedInfo();
             System.out.println("done.");
-        } catch (IOException ex) {
+        } catch (IOException | SQLException ex) {
             System.out.println("Error.");
             System.exit(1);
 
@@ -194,7 +194,7 @@ public class GTFSuploader {
         }
     }
 
-    private static void openFeedInfo() throws IOException {
+    private static void openFeedInfo() throws IOException, SQLException {
         BufferedReader reader
                 = new BufferedReader(
                         new InputStreamReader(
@@ -205,9 +205,32 @@ public class GTFSuploader {
         String[] row = reader.readLine().split(",");
         startDate = row[3].substring(1, row[3].lastIndexOf("\""));
         endDate = row[4].substring(1, row[3].lastIndexOf("\""));
+        String feed_date = row[row.length-1].substring(0, row[row.length-1].lastIndexOf("\"")).trim();
+        String feed_version = row[row.length-2].substring(1).trim();
         reader.close();
+        
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+        
+        try {
+            
+        
+            insertFeedInfo(feed_date, feed_version);
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+        
 //        System.out.println(startDate);
 //        System.out.println(endDate);
+    }
+    
+    private static void insertFeedInfo(String feedDate, String feedVersion)throws SQLException {
+        String insertQuery = "INSERT INTO gtfs.feed(\n" +
+"            uploaded, start_date, end_date, feed_date, version)\n" +
+"    VALUES (now(), "+startDate+", "+endDate+", to_date('"+feedDate+"' , 'MM/DD/YY'),"+feedVersion+" );";
+        PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
+        insert.execute();
     }
 
     private static void readStops() throws IOException, SQLException {
