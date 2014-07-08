@@ -360,7 +360,7 @@ public class GTFSuploader {
     }
 
     private static void createStopsTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.stops_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stops_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.stops)\n"
@@ -370,7 +370,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.stops_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stops_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.stops_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -426,7 +427,7 @@ public class GTFSuploader {
     }
 
     private static void createStopsTimesTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.stop_times_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stop_times_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.stop_times)\n"
@@ -436,7 +437,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.stop_times_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stop_times_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_times_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_times_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.stop_times_" + startDate + "_" + endDate + ";";;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -483,7 +485,7 @@ public class GTFSuploader {
     }
 
     private static void createFrequenciesTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.frequencies_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.frequencies_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.frequencies)\n"
@@ -493,7 +495,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.frequencies_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.frequencies_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -566,7 +569,7 @@ public class GTFSuploader {
     }
 
     private static void createCalendarTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.calendar_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.calendar_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.calendar)\n"
@@ -576,7 +579,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.calendar_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.calendar_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.calendar_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.calendar_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.calendar_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -603,7 +607,7 @@ public class GTFSuploader {
     }
 
     private static void createCalendar_datesTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.calendar_dates_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.calendar_dates)\n"
@@ -613,7 +617,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -641,7 +646,7 @@ public class GTFSuploader {
     }
 
     private static void createTripsTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.trips_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + "route_id character varying(32) NOT NULL,\n"
                 + "  service_id character varying(32),\n"
@@ -655,7 +660,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.trips_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.trips_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.trips_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.trips_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -683,7 +689,7 @@ public class GTFSuploader {
     }
 
     private static void createTransfersTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.transfers_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.transfers)\n"
@@ -693,7 +699,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.transfers_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.transfers_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -731,7 +738,7 @@ public class GTFSuploader {
     }
 
     private static void createRoutesTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.routes_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.routes_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.routes)\n"
@@ -741,7 +748,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.routes_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.routes_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.routes_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.routes_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.routes_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -785,7 +793,7 @@ public class GTFSuploader {
     }
 
     private static void createStopGeometryTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.stops_geog)\n"
@@ -795,7 +803,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.stops_geog_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -851,7 +860,7 @@ public class GTFSuploader {
     }
 
     private static void createNearestStopStopMatrixTable() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.stop_stop_matrix)\n"
@@ -861,7 +870,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -920,7 +930,7 @@ public class GTFSuploader {
     }
 
     private static void createBus_patterns_Table() throws SQLException {
-        String createStopsQuery = "CREATE TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
+        String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
                 + "(\n"
                 + ")\n"
                 + "INHERITS (gtfs.bus_patterns)\n"
@@ -930,7 +940,8 @@ public class GTFSuploader {
                 + "ALTER TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO radumas;\n"
-                + "GRANT SELECT, REFERENCES ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO mbta_researchers;";
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO mbta_researchers;"
+                + "TRUNCATE TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + ";";
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
