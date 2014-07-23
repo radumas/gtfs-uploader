@@ -228,7 +228,7 @@ public class GTFSuploader {
     private static void insertFeedInfo(String feedDate, String feedVersion)throws SQLException {
         String insertQuery = "INSERT INTO gtfs.feed(\n" +
 "            uploaded, start_date, end_date, feed_date, version)\n" +
-"    VALUES (now(), "+startDate+", "+endDate+", to_date('"+feedDate+"' , 'MM/DD/YY'),"+feedVersion+" );";
+"    VALUES (now(), "+startDate+", "+endDate+", to_date('"+feedDate+"' , 'MM/DD/YY'),'"+feedVersion+"' );";
         PreparedStatement insert = dbConnection.prepareStatement(insertQuery);
         insert.execute();
     }
@@ -362,7 +362,7 @@ public class GTFSuploader {
     private static void createStopsTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stops_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.stops))\n"
+                + "LIKE gtfs.stops\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -429,7 +429,7 @@ public class GTFSuploader {
     private static void createStopsTimesTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stop_times_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.stop_times))\n"
+                + "LIKE gtfs.stop_times)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -487,7 +487,7 @@ public class GTFSuploader {
     private static void createFrequenciesTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.frequencies_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.frequencies))\n"
+                + "LIKE gtfs.frequencies)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -571,7 +571,7 @@ public class GTFSuploader {
     private static void createCalendarTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.calendar_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.calendar))\n"
+                + "LIKE gtfs.calendar)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -609,7 +609,7 @@ public class GTFSuploader {
     private static void createCalendar_datesTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.calendar_dates_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.calendar_dates))\n"
+                + "LIKE gtfs.calendar_dates)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -648,7 +648,7 @@ public class GTFSuploader {
     private static void createTripsTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.trips_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.trips)"
+                + "LIKE gtfs.trips"
                 + ");\n"
                 + "ALTER TABLE gtfs.trips_" + startDate + "_" + endDate + "\n"
                 + "  OWNER TO java;\n"
@@ -684,7 +684,7 @@ public class GTFSuploader {
     private static void createTransfersTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.transfers_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.transfers))\n"
+                + "LIKE gtfs.transfers)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -733,7 +733,7 @@ public class GTFSuploader {
     private static void createRoutesTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.routes_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.routes))\n"
+                + "LIKE gtfs.routes)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -788,7 +788,7 @@ public class GTFSuploader {
     private static void createStopGeometryTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stops_geog_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.stops_geog))\n"
+                + "LIKE gtfs.stops_geog)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -855,7 +855,7 @@ public class GTFSuploader {
     private static void createNearestStopStopMatrixTable() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.stop_stop_matrix_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.stop_stop_matrix))\n"
+                + "LIKE gtfs.stop_stop_matrix)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
@@ -925,7 +925,7 @@ public class GTFSuploader {
     private static void createBus_patterns_Table() throws SQLException {
         String createStopsQuery = "CREATE TABLE  IF NOT EXISTS gtfs.bus_patterns_" + startDate + "_" + endDate + "\n"
                 + "(\n"
-                + "LIKE (gtfs.bus_patterns))\n"
+                + "LIKE gtfs.bus_patterns)\n"
                 + "\n"
                 + "WITH (\n"
                 + "  OIDS=FALSE\n"
