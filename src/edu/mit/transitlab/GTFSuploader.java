@@ -371,7 +371,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stops_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.stops_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.stops_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -439,7 +440,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stop_times_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_times_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.stop_times_" + startDate + "_" + endDate + " CASCADE;";;
+//                + "TRUNCATE TABLE gtfs.stop_times_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -498,7 +500,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.frequencies_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.frequencies_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.frequencies_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -583,7 +586,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.calendar_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.calendar_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.calendar_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.calendar_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -622,7 +626,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.calendar_dates_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -659,7 +664,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.trips_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.trips_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.trips_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.trips_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -699,7 +705,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.transfers_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.transfers_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.transfers_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -749,7 +756,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.routes_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.routes_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.routes_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.routes_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -805,7 +813,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.stops_geog_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -873,7 +882,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.stop_stop_matrix_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
@@ -944,7 +954,8 @@ public class GTFSuploader {
                 + "  OWNER TO java;\n"
                 + "GRANT ALL ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO radumas;\n"
                 + "GRANT SELECT, REFERENCES ON TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " TO mbta_researchers;"
-                + "TRUNCATE TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " CASCADE;";
+//                + "TRUNCATE TABLE gtfs.bus_patterns_" + startDate + "_" + endDate + " CASCADE;"
+                ;
         PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
         createStops.execute();
 
