@@ -131,6 +131,17 @@ public class GTFSuploader {
             System.out.println("Error.");
             Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        try{
+            System.out.print("Opening shapes.txt...");
+            readShapes();
+            System.out.println("done.");
+
+            
+        }catch (IOException | SQLException ex) {
+            System.out.println("Error.");
+            Logger.getLogger(GTFSuploader.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         try {
             System.out.print("Add primary keys and foreign keys to gtfs tables...");
@@ -458,7 +469,7 @@ public class GTFSuploader {
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
         try {
-            String createTempStops = "CREATE TEMP TABLE tempfrequencies \n"
+                 String createTempFreq = "CREATE TEMP TABLE tempfrequencies \n"
                     + "(\n"
                     + "  trip_id character varying(64) NOT NULL,\n"
                     + "  start_time character varying(8) NOT NULL,\n"
@@ -466,7 +477,7 @@ public class GTFSuploader {
                     + "  headway_secs smallint NOT NULL) WITH\n"
                     + "(  OIDS=FALSE\n"
                     + ");";
-            PreparedStatement createTemp = dbConnection.prepareStatement(createTempStops);
+            PreparedStatement createTemp = dbConnection.prepareStatement(createTempFreq);
 
             createTemp.execute();
 
@@ -475,8 +486,8 @@ public class GTFSuploader {
             String insertQuery = "INSERT INTO gtfs.frequencies_" + startDate + "_" + endDate + " \n"
                     + "(SELECT trip_id, date '1899-12-31' + start_time::interval, date '1899-12-31' + end_time::interval, headway_secs FROM tempfrequencies);";
 
-            PreparedStatement insertStopTimes = dbConnection.prepareStatement(insertQuery);
-            insertStopTimes.execute();
+            PreparedStatement insertFrequencies = dbConnection.prepareStatement(insertQuery);
+            insertFrequencies.execute();
         } catch (PSQLException ex) {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
@@ -503,6 +514,53 @@ public class GTFSuploader {
         createStops.execute();
 
     }
+    
+    private static void readShapes() throws IOException, SQLException {
+        if (dbConnection.isClosed()) {
+            openDatabaseConnection();
+        }
+
+        try {
+            createShapesTable();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+
+        CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
+
+        try {
+          
+
+            manager.copyIn("COPY gtfs.shapes_" + startDate + "_" + endDate + " FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("shapes.txt"));
+
+          
+        } catch (PSQLException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getServerErrorMessage().getMessage());
+        }
+
+    }
+
+    private static void createShapesTable() throws SQLException {
+        String createStopsQuery = "DROP TABLE IF EXISTS gtfs.shapes_" + startDate + "_" + endDate + " CASCADE;\n"
+                +"CREATE TABLE  IF NOT EXISTS gtfs.shapes_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + "LIKE gtfs.shapes)\n"
+                + "\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.shapes_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.shapes_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.shapes_" + startDate + "_" + endDate + " TO mbta_researchers;"
+//                + "TRUNCATE TABLE gtfs.shapes_" + startDate + "_" + endDate + " CASCADE;"
+                ;
+        PreparedStatement createStops = dbConnection.prepareStatement(createStopsQuery);
+        createStops.execute();
+
+    }
+    
 
     private static void readCalendar() throws IOException, SQLException {
         if (dbConnection.isClosed()) {
