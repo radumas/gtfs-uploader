@@ -538,7 +538,19 @@ public class GTFSuploader {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
         }
+        
+        createShapesGeom();
+        
 
+    }
+    
+    private static void createShapesGeom() throws IOException, SQLException{
+        try {
+            createShapesGeomTable();
+        } catch (PSQLException e) {
+            System.out.println(e);
+        };
+        
     }
 
     private static void createShapesTable() throws SQLException {
@@ -1086,5 +1098,24 @@ public class GTFSuploader {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
         }
+    }
+
+    private static void createShapesGeomTable() {
+        String createShapesGeom = "DROP TABLE IF EXISTS gtfs.shapes_geog_" + startDate + "_" + endDate + " CASCADE;\n"
+                + "CREATE TABLE  IF NOT EXISTS gtfs.shapes_geog_" + startDate + "_" + endDate + "\n"
+                + "(\n"
+                + "LIKE gtfs.bus_patterns)\n"
+                + "\n"
+                + "WITH (\n"
+                + "  OIDS=FALSE\n"
+                + ");\n"
+                + "ALTER TABLE gtfs.shapes_geog_" + startDate + "_" + endDate + "\n"
+                + "  OWNER TO java;\n"
+                + "GRANT ALL ON TABLE gtfs.shapes_geog_" + startDate + "_" + endDate + " TO radumas;\n"
+                + "GRANT SELECT, REFERENCES ON TABLE gtfs.shapes_geog_" + startDate + "_" + endDate + " TO mbta_researchers;"
+//                + "TRUNCATE TABLE gtfs.shapes_geog_" + startDate + "_" + endDate + " CASCADE;"
+                ;
+        PreparedStatement createStops = dbConnection.prepareStatement(createShapesGeom);
+        createStops.execute();
     }
 }
