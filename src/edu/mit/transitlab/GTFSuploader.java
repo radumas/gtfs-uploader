@@ -158,6 +158,7 @@ public class GTFSuploader {
             insertStopGeometry();
             insertNearestStopStopMatrix();
             insertBusPatterns();
+            createBusTripPatternView();
             System.out.println("done.");
 
         } catch (SQLException ex) {
@@ -969,6 +970,8 @@ public class GTFSuploader {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
         }
+        
+        
 
     }
 
@@ -1033,5 +1036,23 @@ public class GTFSuploader {
                 ;
         PreparedStatement createStops = dbConnection.prepareStatement(createShapesGeom);
         createStops.execute();
+    }
+
+    private static void createBusTripPatternView() {
+        String createBusTripPattern = "CREATE OR REPLACE VIEW gtfs.bustrippatterns_20140227_20140620 AS \n" +
+" SELECT trips.route_id,\n" +
+"    trips.direction_id,\n" +
+"    trips.trip_id,\n" +
+"    bp.stop_id,\n" +
+"    bp.stop_sequence,\n" +
+"    bp.cumulative_distance\n" +
+"   FROM gtfs.bus_patterns_20140227_20140620 bp\n" +
+"     JOIN gtfs.trips_20140227_20140620 trips ON bp.shape_id::text = trips.shape_id::text;\n" +
+"\n" +
+"ALTER TABLE gtfs.bustrippatterns_20140227_20140620\n" +
+"  OWNER TO radumas;\n" +
+"GRANT ALL ON TABLE gtfs.bustrippatterns_20140227_20140620 TO radumas;\n" +
+"GRANT SELECT, REFERENCES ON TABLE gtfs.bustrippatterns_20140227_20140620 TO mbta_researchers;\n" +
+"GRANT ALL ON TABLE gtfs.bustrippatterns_20140227_20140620 TO mbta_admin;";
     }
 }
