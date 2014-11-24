@@ -545,7 +545,7 @@ public class GTFSuploader {
             System.out.println(e);
         };
 
-        String insertQuery = "SELECT gtfs.gtfs.insert_shapes_geog(\n'"
+        String insertQuery = "SELECT gtfs.insert_shapes_geog(\n'"
                 + startDate + "','" + endDate + "'\n"
                 + ");";
 
