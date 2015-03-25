@@ -788,17 +788,8 @@ public class GTFSuploader {
         CopyManager manager = new CopyManager((BaseConnection) (dbConnection));
 
         try {
-            manager.copyIn("COPY gtfs.routes_" + startDate + "_" + endDate + "(\n"
-                    + "route_id,\n"
-                    + "agency_id,\n"
-                    + "route_short_name,\n"
-                    + "route_long_name,\n"
-                    + "route_desc,\n"
-                    + "route_type,\n"
-                    + "route_url,\n"
-                    + "route_color,\n"
-                    + "route_text_color\n"
-                    + ")  FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("routes.txt"));
+            manager.copyIn("COPY gtfs.routes_" + startDate + "_" + endDate + 
+                    " FROM STDIN WITH (FORMAT 'csv', HEADER true)", new FileReader("routes.txt"));
         } catch (PSQLException ex) {
             System.out.println(ex);
             System.out.println(ex.getServerErrorMessage().getMessage());
